@@ -1,0 +1,12 @@
+scripts:
+# -- 실험 버전 --
+
+  - id: ubuntu
+    title: "Ubuntu Container (Experimental)"
+    image: "ubuntu:latest"
+    cmd: ["/bin/bash"]
+    env: { OUTPUT_DIR: "/app/out" }
+    cpu_limit: "2.0"
+    mem_limit: "2048m"
+
+# -- 개발 버전 --

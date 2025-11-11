@@ -1,0 +1,83 @@
+services:
+
+  # # Docker Web Terminal # #
+  api:
+    build: ./0_api
+    container_name: docker-web-terminal-api
+    hostname: docker-web-terminal-api
+    environment:
+    - DOCKER_HOST=tcp://socket-proxy:2375
+    - SCRIPTS_CONFIG=/configs/scripts.yaml
+    - ALLOW_ORIGINS=${ALLOW_ORIGINS}
+    volumes:
+    - ./2_configs:/configs:ro
+    depends_on:
+    - socket-proxy
+    # ports:
+    # - "55505:8000" # nginx 추가로 주석처리
+    networks:
+      task_bridge:
+        ipv4_address: 172.31.0.10
+
+  web:
+    build:
+      context: ./1_web
+      args:
+        VITE_API_BASE: "/api"
+    container_name: docker-web-terminal-web
+    hostname: docker-web-terminal-web
+    environment:
+      - VITE_API_BASE=${VITE_API_BASE:-/api}
+    depends_on:
+    - api
+    # ports:
+    # - "15505:80"  # nginx 추가로 주석처리
+    networks:
+      task_bridge:
+        ipv4_address: 172.31.0.20
+
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: docker-web-terminal-ds_proxy
+    hostname: docker-web-terminal-ds_proxy
+    environment:
+    - CONTAINERS=1
+    - IMAGES=1
+    - NETWORKS=1
+    - EXEC=1
+    - POST=1
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    expose:
+    - "2375"
+    restart: unless-stopped
+    networks:
+      task_bridge:
+        ipv4_address: 172.31.0.30
+
+  nginx:
+    build: ./3_nginx
+    container_name: docker-web-terminal-nginx
+    hostname: docker-web-terminal-nginx
+    depends_on:
+      - web
+      - api
+    ports:
+      - "443:443"
+      # - "80:80" # 필요에 따라 주석 해제
+    networks:
+      task_bridge:
+        ipv4_address: 172.31.0.40
+
+networks:
+  task_bridge:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.31.0.0/16          
+          gateway: "172.31.0.1"
+
+volumes:
+  certbot-etc:
+  certbot-www:
