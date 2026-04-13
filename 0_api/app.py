@@ -1,3 +1,6 @@
+# app.py
+
+# packages
 import os, asyncio, uuid, io, tarfile, yaml
 
 from typing             import Literal
@@ -8,17 +11,18 @@ from fastapi.responses  import JSONResponse, StreamingResponse
 from models             import ScriptItem, StartRequest, StartResponse, StopResponse
 from docker_ctl         import load_scripts, create_and_start, stop_and_remove, docker_client
 
+# constants / globals
 # --- FastAPI -------------------------------------------------------------
 app = FastAPI(title="Docker Web Terminal API")
 
 # --- Config 로딩 ---------------------------------------------------------
 SCRIPTS_CONFIG_PATH = os.getenv("SCRIPTS_CONFIG", "/configs/scripts.yaml")
 
+# functions
 def load_config_yaml() -> dict:
     try:
-        with open(SCRIPTS_CONFIG_PATH, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f) or {}
-    except FileNotFoundError:
+        with open(SCRIPTS_CONFIG_PATH, "r", encoding="utf-8") as f: return yaml.safe_load(f) or {}
+    except FileNotFoundError: 
         return {}
     except Exception as e:
         # 문제 시 빈 dict와 함께 에러 힌트를 포함해도 됨
